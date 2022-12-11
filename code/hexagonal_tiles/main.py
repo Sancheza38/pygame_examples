@@ -18,10 +18,12 @@ from hexagon import HexagonTile
 def create_hexagon(position, radius=50, flat_top=False) -> HexagonTile:
     """Creates a hexagon tile at the specified position"""
     class_ = FlatTopHexagonTile if flat_top else HexagonTile
-    return class_(radius, position, colour=get_random_colour())
+    if position[0] % 2 == 0:
+            return class_(radius, position, colour=(235, 200, 142))
+    else:
+            return class_(radius, position, colour=(234, 117, 63))
 
-
-def get_random_colour(min_=150, max_=255) -> Tuple[int, ...]:
+def get_random_colour(min_=254, max_=255) -> Tuple[int, ...]:
     """Returns a random RGB colour with each component between min_ and max_"""
     return tuple(random.choices(list(range(min_, max_)), k=3))
 
@@ -61,6 +63,7 @@ def render(screen, hexagons):
     screen.fill((0, 0, 0))
     for hexagon in hexagons:
         hexagon.render(screen)
+        hexagon.render_highlight(screen, border_colour=(0, 0, 0))
 
     # draw borders around colliding hexagons and neighbours
     mouse_pos = pygame.mouse.get_pos()
@@ -77,7 +80,7 @@ def render(screen, hexagons):
 def main():
     """Main function"""
     pygame.init()
-    screen = pygame.display.set_mode((600, 400))
+    screen = pygame.display.set_mode((1200, 800))
     clock = pygame.time.Clock()
     hexagons = init_hexagons(flat_top=True)
     terminated = False
