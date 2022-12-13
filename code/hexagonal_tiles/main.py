@@ -4,6 +4,7 @@ Created on Sun Jan 23 13:50:07 2022
 
 @author: richa
 """
+import os
 import random
 from typing import List
 from typing import Tuple
@@ -11,12 +12,24 @@ from typing import Tuple
 import pygame
 from hexagon import FlatTopHexagonTile
 from hexagon import HexagonTile
+pygame.init()
 
 # pylint: disable=no-member
+LIGHT_CYAN = (85, 255, 255)
+LIGHT_MAGENTA = (255, 85, 255)
+current_player = LIGHT_CYAN
+next_player = LIGHT_MAGENTA
 
+_FONT_PATH = os.path.join("code","hexagonal_tiles","ModernDOS8x8.ttf")
+font = pygame.font.Font(_FONT_PATH, 31)
+player = font.render("Player 1", False, (0, 170, 170))
+nextPlayer = font.render("Player 2", False, (170, 0, 170))
+
+
+#width length of hexagons is 894.915 pixels
 #colour=(235, 200, 142)
 #colour=(234, 117, 63)
-def create_hexagon(position, radius=50, flat_top=False) -> HexagonTile:
+def create_hexagon(position, radius=30, flat_top=False) -> HexagonTile:
     """Creates a hexagon tile at the specified position"""
     class_ = FlatTopHexagonTile if flat_top else HexagonTile
     return class_(radius, position, colour=(255, 255, 255))
@@ -30,15 +43,16 @@ def get_random_colour(min_=254, max_=255) -> Tuple[int, ...]:
     return tuple(random.choices(list(range(min_, max_)), k=3))
 
 
-def init_hexagons(num_x=20, num_y=20, flat_top=False) -> List[HexagonTile]:
+def init_hexagons(num_x=18, num_y=14, flat_top=False) -> List[HexagonTile]:
     """Creates a hexaogonal tile map of size num_x * num_y"""
     # pylint: disable=invalid-name
-    leftmost_hexagon = create_hexagon(position=(-50, -50), flat_top=flat_top)
+    leftmost_hexagon = create_hexagon(position=(159, 150), flat_top=flat_top)
     hexagons = [leftmost_hexagon]
     for x in range(num_y):
         if x:
             # alternate between bottom left and bottom right vertices of hexagon above
-            index = 2 if x % 2 == 1 or flat_top else 4
+            index = 4 if x % 2 == 1 or flat_top else 2
+            print(index)
             position = leftmost_hexagon.vertices[index]
             leftmost_hexagon = create_hexagon(position, flat_top=flat_top)
             hexagons.append(leftmost_hexagon)
@@ -62,7 +76,9 @@ def init_hexagons(num_x=20, num_y=20, flat_top=False) -> List[HexagonTile]:
 
 def render(screen, hexagons):
     """Renders hexagons on the screen"""
-    screen.fill((0, 0, 0))
+    screen.fill(current_player)
+    screen.blit(player,(4,4))
+
     for hexagon in hexagons:
         hexagon.render(screen)
         hexagon.render_highlight(screen, border_colour=(0, 0, 0))
@@ -70,7 +86,9 @@ def render(screen, hexagons):
 
 def render_mouse_down(screen, hexagons):
     """Renders hexagons on the screen"""
-    screen.fill((0, 0, 0))
+    screen.fill(current_player)
+    screen.blit(player,(4,4))
+
     for hexagon in hexagons:
         hexagon.render(screen)
         hexagon.render_highlight(screen, border_colour=(0, 0, 0))
@@ -85,14 +103,22 @@ def render_mouse_down(screen, hexagons):
         hexagon.render_highlight(screen, border_colour=(255, 255, 255))
     pygame.display.flip()
 
+def changePlayer():
+    global current_player, next_player, textsurface, player, nextPlayer
+    current_player, next_player, player, nextPlayer = next_player, current_player, nextPlayer, player
+
 
 def main():
     mouse_down = False
+    #text_obj=font_obj.render("Welcome to Pygame",True,font_color=(0,0,0))
+
     """Main function"""
     pygame.init()
-    screen = pygame.display.set_mode((1300, 860))
+
+
+    screen = pygame.display.set_mode((1280, 960))
     clock = pygame.time.Clock()
-    hexagons = init_hexagons(flat_top=True)
+    hexagons = init_hexagons(flat_top=False)
     terminated = False
     while not terminated:
         for event in pygame.event.get():
@@ -102,13 +128,15 @@ def main():
                 mouse_down = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_down = False
+                changePlayer()
         for hexagon in hexagons:
             hexagon.update()
-        
+
         if mouse_down == True:
             render_mouse_down(screen, hexagons)
         else:
             render(screen, hexagons)
+
         clock.tick(50)
     pygame.display.quit()
 
