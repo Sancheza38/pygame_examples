@@ -26,33 +26,28 @@ player = font.render("Player 1", False, (0, 170, 170))
 nextPlayer = font.render("Player 2", False, (170, 0, 170))
 
 
-#width length of hexagons is 894.915 pixels
-#colour=(235, 200, 142)
-#colour=(234, 117, 63)
-def create_hexagon(position, radius=30, flat_top=False) -> HexagonTile:
+
+def create_hexagon(position, radius=34.64, flat_top=False) -> HexagonTile:
     """Creates a hexagon tile at the specified position"""
     class_ = FlatTopHexagonTile if flat_top else HexagonTile
     return class_(radius, position, colour=(255, 255, 255))
-    # if position[0] % 2 == 0:
-    #         return class_(radius, position, colour=(255, 255, 255))
-    # else:
-    #         return class_(radius, position, colour=(234, 117, 63))
+
 
 def get_random_colour(min_=254, max_=255) -> Tuple[int, ...]:
     """Returns a random RGB colour with each component between min_ and max_"""
     return tuple(random.choices(list(range(min_, max_)), k=3))
 
 
-def init_hexagons(num_x=18, num_y=14, flat_top=False) -> List[HexagonTile]:
+def init_hexagons(num_x=17, num_y=14, flat_top=False) -> List[HexagonTile]:
     """Creates a hexaogonal tile map of size num_x * num_y"""
     # pylint: disable=invalid-name
-    leftmost_hexagon = create_hexagon(position=(159, 150), flat_top=flat_top)
+    #(159,150)
+    leftmost_hexagon = create_hexagon(position=(115,108), flat_top=flat_top)
     hexagons = [leftmost_hexagon]
     for x in range(num_y):
         if x:
             # alternate between bottom left and bottom right vertices of hexagon above
             index = 4 if x % 2 == 1 or flat_top else 2
-            print(index)
             position = leftmost_hexagon.vertices[index]
             leftmost_hexagon = create_hexagon(position, flat_top=flat_top)
             hexagons.append(leftmost_hexagon)
@@ -77,7 +72,7 @@ def init_hexagons(num_x=18, num_y=14, flat_top=False) -> List[HexagonTile]:
 def render(screen, hexagons):
     """Renders hexagons on the screen"""
     screen.fill(current_player)
-    screen.blit(player,(4,4))
+    screen.blit(player,(4,5))
 
     for hexagon in hexagons:
         hexagon.render(screen)
@@ -87,14 +82,13 @@ def render(screen, hexagons):
 def render_mouse_down(screen, hexagons):
     """Renders hexagons on the screen"""
     screen.fill(current_player)
-    screen.blit(player,(4,4))
+    screen.blit(player,(4,5))
 
     for hexagon in hexagons:
         hexagon.render(screen)
         hexagon.render_highlight(screen, border_colour=(0, 0, 0))
 
     # draw borders around colliding hexagons and neighbours
-    
     mouse_pos = pygame.mouse.get_pos()
     colliding_hexagons = [
         hexagon for hexagon in hexagons if hexagon.collide_with_point(mouse_pos)
@@ -109,13 +103,9 @@ def changePlayer():
 
 
 def main():
-    mouse_down = False
-    #text_obj=font_obj.render("Welcome to Pygame",True,font_color=(0,0,0))
-
     """Main function"""
     pygame.init()
-
-
+    mouse_down = False
     screen = pygame.display.set_mode((1280, 960))
     clock = pygame.time.Clock()
     hexagons = init_hexagons(flat_top=False)
