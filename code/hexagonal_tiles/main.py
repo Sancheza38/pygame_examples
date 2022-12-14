@@ -12,30 +12,73 @@ from typing import Tuple
 import pygame
 from hexagon import FlatTopHexagonTile
 from hexagon import HexagonTile
+from Unit import Unit
+import math
 pygame.init()
+
+
 
 # pylint: disable=no-member
 LIGHT_CYAN = (85, 255, 255)
 LIGHT_MAGENTA = (255, 85, 255)
+DARK_CYAN = (0, 170, 170)
+DARK_MAGENTA = (170, 0, 170)
 current_player = LIGHT_CYAN
+cur_player = 0
+nxt_player = 1
 next_player = LIGHT_MAGENTA
+UNITS_NUM = 18
+
+
 
 _FONT_PATH = os.path.join("code","hexagonal_tiles","ModernDOS8x8.ttf")
 font = pygame.font.Font(_FONT_PATH, 31)
-player = font.render("Player 1", False, (0, 170, 170))
-nextPlayer = font.render("Player 2", False, (170, 0, 170))
-
-
+player = font.render("Player 1", False, DARK_CYAN)
+nextPlayer = font.render("Player 2", False, DARK_MAGENTA)
 
 def create_hexagon(position, radius=34.64, flat_top=False) -> HexagonTile:
     """Creates a hexagon tile at the specified position"""
     class_ = FlatTopHexagonTile if flat_top else HexagonTile
     return class_(radius, position, colour=(255, 255, 255))
 
-
 def get_random_colour(min_=254, max_=255) -> Tuple[int, ...]:
     """Returns a random RGB colour with each component between min_ and max_"""
     return tuple(random.choices(list(range(min_, max_)), k=3))
+
+def init_units(UNITS_NUM=18) -> List[Unit]:
+    """Creates a list of unit pieces for the gameboard"""
+    i,j,j1,j2,dd,best_dd,best = None
+    h=960
+    w=1280
+    rad=34.64
+    border_y = 108
+    border_x = 115
+    circle = Unit[UNITS_NUM]
+    for unit in range(UNITS_NUM/2):
+        circle[unit].num=unit
+        circle[unit+UNITS_NUM/2].num=unit+UNITS_NUM/2
+        def ti_restart():
+            circle[unit].y= math.floor((random.randrange(0,4294967295)%960)-(34.64*2))+34.64
+            circle[unit+UNITS_NUM/2].y=h-1-circle[unit].y
+            j1 = circle[unit].y/(rad*2)
+            j2 = circle[unit+UNITS_NUM/2].y/(rad*2)
+            circle[unit].y+=border_y
+
+            if not unit:
+                circle[unit].x=rad
+                if j1&1:
+                    ti_restart()
+            else:
+                circle[unit].x=math.floor((random.randrange(0,4294967295)%((w-rad*2*2)/2))-(34.64*2))+34.64
+        
+        ti_restart()
+        circle[unit+UNITS_NUM/2].x=w-1-circle[unit].x
+        if j1&1:
+            circle[unit].x+=rad
+        if j2&1:
+            circle[unit+UNITS_NUM/2].x+=rad
+        circle[unit].x+=border_x
+        circle[unit+UNITS_NUM/2].x+=border_x
 
 
 def init_hexagons(num_x=17, num_y=14, flat_top=False) -> List[HexagonTile]:
@@ -69,7 +112,7 @@ def init_hexagons(num_x=17, num_y=14, flat_top=False) -> List[HexagonTile]:
     return hexagons
 
 
-def render(screen, hexagons):
+def render(screen, hexagons, circle):
     """Renders hexagons on the screen"""
     screen.fill(current_player)
     screen.blit(player,(4,5))
@@ -77,9 +120,10 @@ def render(screen, hexagons):
     for hexagon in hexagons:
         hexagon.render(screen)
         hexagon.render_highlight(screen, border_colour=(0, 0, 0))
+    circle.render(screen)
     pygame.display.flip()
 
-def render_mouse_down(screen, hexagons):
+def render_mouse_down(screen, hexagons, circle):
     """Renders hexagons on the screen"""
     screen.fill(current_player)
     screen.blit(player,(4,5))
@@ -95,6 +139,7 @@ def render_mouse_down(screen, hexagons):
     ]
     for hexagon in colliding_hexagons:
         hexagon.render_highlight(screen, border_colour=(255, 255, 255))
+    circle.render(screen)
     pygame.display.flip()
 
 def changePlayer():
@@ -109,6 +154,9 @@ def main():
     screen = pygame.display.set_mode((1280, 960))
     clock = pygame.time.Clock()
     hexagons = init_hexagons(flat_top=False)
+    #unit_list = init_units(UNITS_NUM=UNITS_NUM)
+    count = 0
+    circle = Unit(1,hexagons[count].centre, 1, 2, DARK_MAGENTA, True, 30, True)
     terminated = False
     while not terminated:
         for event in pygame.event.get():
@@ -119,13 +167,17 @@ def main():
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_down = False
                 changePlayer()
+                if count < 251: count+=1
+                else: count=0
+                circle.center = hexagons[count].centre
+
         for hexagon in hexagons:
             hexagon.update()
 
         if mouse_down == True:
-            render_mouse_down(screen, hexagons)
+            render_mouse_down(screen, hexagons, circle)
         else:
-            render(screen, hexagons)
+            render(screen, hexagons, circle)
 
         clock.tick(50)
     pygame.display.quit()
