@@ -5,6 +5,8 @@ from dataclasses import dataclass
 class Unit:
     num: int
     center: tuple
+    x: float
+    y: float
     player: int
     link: int
     color: tuple
