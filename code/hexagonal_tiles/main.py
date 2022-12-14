@@ -28,7 +28,7 @@ cur_player = 0
 nxt_player = 1
 next_player = LIGHT_MAGENTA
 UNITS_NUM = 18
-
+circle=None
 
 
 _FONT_PATH = os.path.join("code","hexagonal_tiles","ModernDOS8x8.ttf")
@@ -139,6 +139,9 @@ def render_mouse_down(screen, hexagons, circle):
     ]
     for hexagon in colliding_hexagons:
         hexagon.render_highlight(screen, border_colour=(255, 255, 255))
+        hexagon.colour=LIGHT_MAGENTA
+        circle.center=hexagon.centre
+    
     circle.render(screen)
     pygame.display.flip()
 
@@ -149,6 +152,7 @@ def changePlayer():
 
 def main():
     """Main function"""
+    temp=None
     pygame.init()
     mouse_down = False
     screen = pygame.display.set_mode((1280, 960))
@@ -157,6 +161,7 @@ def main():
     #unit_list = init_units(UNITS_NUM=UNITS_NUM)
     count = 0
     circle = Unit(1,hexagons[count].centre, 1, 2, DARK_MAGENTA, True, 30, True)
+    temp=circle.center
     terminated = False
     while not terminated:
         for event in pygame.event.get():
@@ -169,13 +174,16 @@ def main():
                 changePlayer()
                 if count < 251: count+=1
                 else: count=0
-                circle.center = hexagons[count].centre
+                # circle.center = hexagons[count].centre
+                temp = circle.center
+                circle.center = temp
 
         for hexagon in hexagons:
             hexagon.update()
 
         if mouse_down == True:
             render_mouse_down(screen, hexagons, circle)
+          
         else:
             render(screen, hexagons, circle)
 
